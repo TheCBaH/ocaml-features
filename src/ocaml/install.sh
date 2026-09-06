@@ -255,10 +255,9 @@ opam_available() {
 install_opam_binary() {
     echo "No distro package for opam on this image; installing the upstream prebuilt binary from opam.ocaml.org"
     case "$PKG_MANAGER" in
-        dnf) check_packages gcc make ;;
-        apk) check_packages build-base ;;
+        dnf) check_packages curl gcc make unzip bubblewrap patch ;;
+        apk) check_packages curl build-base ;;
     esac
-    check_packages curl
     tmp_dir=$(mktemp -d)
     (cd "$tmp_dir" && curl -fsSL https://opam.ocaml.org/install.sh | sh -s -- --download-only)
     bin=$(find "$tmp_dir" -maxdepth 1 -name 'opam-*' -type f | head -n 1)
@@ -321,8 +320,15 @@ for pkg in ${OPTIONAL_PACKAGES}; do
         *#*)
             pkg_name=$(echo "$pkg" | cut -d'#' -f1)
             pkg_ver=$(echo "$pkg" | cut -d'#' -f2)
-            opam pin add --no-action "$pkg_name" "$pkg_ver"
-            OPTIONAL_OPAM_PACKAGES="${OPTIONAL_OPAM_PACKAGES} ${pkg_name}"
+            # Unlike packages/pin-packages, a pin failure here (e.g. the
+            # package name doesn't exist at all, not just an unsolvable
+            # version) must not abort the build: "optional" means skip it,
+            # the same as the not-installable case the dry-run below catches.
+            if opam pin add --no-action "$pkg_name" "$pkg_ver"; then
+                OPTIONAL_OPAM_PACKAGES="${OPTIONAL_OPAM_PACKAGES} ${pkg_name}"
+            else
+                echo "Skipping optional package '$pkg': could not pin" >&2
+            fi
             ;;
         *)
             OPTIONAL_OPAM_PACKAGES="${OPTIONAL_OPAM_PACKAGES} ${pkg}"

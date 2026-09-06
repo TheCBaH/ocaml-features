@@ -7,7 +7,7 @@ source dev-container-features-test-lib
 [ -f /etc/profile.d/ocaml-opam.sh ] && . /etc/profile.d/ocaml-opam.sh
 eval "$(opam env)"
 
-check "ocamlfind pinned to 1.9.6" bash -c 'opam list --installed -s ocamlfind | grep -Fx 1.9.6'
+check "ocamlfind pinned to 1.9.6" bash -c 'opam list --installed --column=version -s ocamlfind | grep -Fx 1.9.6'
 check "dune is installed" dune --version
 
 reportResults

@@ -8,6 +8,6 @@ source dev-container-features-test-lib
 eval "$(opam env)"
 
 check "OCaml version is 4.14.3" bash -c 'ocamlc -version | grep -Fx 4.14.3'
-check "matching override applied" bash -c 'opam list --installed -s ocamlfind | grep -Fx 1.9.6'
+check "matching override applied" bash -c 'opam list --installed --column=version -s ocamlfind | grep -Fx 1.9.6'
 
 reportResults

@@ -8,6 +8,6 @@ source dev-container-features-test-lib
 eval "$(opam env)"
 
 check "utop is installed" utop -version
-check "ocamlfind is pinned to 1.9.6" bash -c 'opam list --installed -s ocamlfind | grep -Fx 1.9.6'
+check "ocamlfind is pinned to 1.9.6" bash -c 'opam list --installed --column=version -s ocamlfind | grep -Fx 1.9.6'
 
 reportResults

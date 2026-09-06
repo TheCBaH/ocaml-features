@@ -32,9 +32,13 @@ it — verified via pkgs.alpinelinux.org, not just the docs page). `dnf`/`apk`
 therefore probe availability first (`opam_available()`) and fall back to
 `opam.ocaml.org/install.sh --download-only` plus a manual `install -m 0755`
 into `/usr/local/bin` when there's no distro package — this also means the
-fallback path must install the build toolchain (gcc/make, or Alpine's
-`build-base`) itself, since a raw binary has no package dependencies to pull
-it in the way the distro-packaged opam does.
+fallback path must install the build toolchain itself, since a raw binary
+has no package dependencies to pull it in the way the distro-packaged opam
+does: `curl gcc make unzip bubblewrap patch` on dnf (a RHEL clone like Rocky
+has none of these by default), `curl build-base` on Alpine.
+Exercised in CI by `rockylinux:9` (no opam package, so this is the only image
+that actually drives the fallback path) and `fedora:44` (has opam, so it
+drives the distro-package path instead).
 
 ## `OPAMROOT` ownership
 
@@ -46,10 +50,14 @@ then the first uid-1000 account, then `root`).
 
 ## Optional vs. required packages
 
-Only `optional-packages` entries may be silently dropped when unsolvable for
-the selected switch/platform (checked with `opam install --show-actions`,
-not `opam list --installable`, since the latter can still match packages
-whose `available:` filter rejects the current architecture). Anything in
+Only `optional-packages` entries may be silently dropped: either the initial
+`name#version` pin fails outright (the package doesn't exist at all — this
+must not abort the build, unlike the same pin for `packages`/`pin-packages`),
+or the pin succeeds but the later solver dry run
+(`opam install --show-actions`, not `opam list --installable`, since the
+latter can still match packages whose `available:` filter rejects the
+current architecture) shows it isn't installable for the selected
+switch/platform. Anything in
 `packages` or `pin-packages` that opam cannot install must still fail the
 build — that is intentional, not a gap to fix.
 
