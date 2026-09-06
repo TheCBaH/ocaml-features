@@ -22,7 +22,7 @@ Install ocaml/opam toolchains (Debian/Ubuntu apt or Gentoo portage)
 | base-packages | space-separated packages installed by default; override this list for minimal or specialized toolchains | string | dune ocaml-lsp-server ocamlformat ocamlformat-rpc |
 | packages | additional space-separated packages to install; use 'name#version' to pin a specific version (e.g. 'utop ocamlformat#0.28.0'). Installation fails if a package is unavailable | string | - |
 | optional-packages | space-separated packages to install only when opam can solve them for the selected switch and platform; same 'name#version' pin syntax as 'packages' (e.g. 'melange') | string | - |
-| version | OCaml version | string | 4.14.3 |
+| version | OCaml version | string | 5.4.1 |
 | options | OPAM switch options | string | - |
 | system-packages | additional system packages | string | - |
 | repositories | comma-separated extra opam repositories to add before installing packages: 'name url' pairs (e.g. 'rocq-released https://rocq-prover.org/opam/released') | string | - |

@@ -8,7 +8,7 @@ source dev-container-features-test-lib
 eval "$(opam env)"
 
 check "opam is available" opam --version
-check "OCaml is available" ocamlc -version
+check "default OCaml version is 5.4.1" bash -c 'ocamlc -version | grep -Fx 5.4.1'
 check "dune (base-packages default) is available" dune --version
 
 reportResults
