@@ -159,8 +159,14 @@ EOF
 updaterc "$rc"
 
 if [ "$PKG_MANAGER" = apt ]; then
+    # ca-certificates first and on its own: opam's own repository fetch is the
+    # very next network access, and a bare (non-devcontainer-base) image such
+    # as plain debian/ubuntu has no CA trust store at all, which fails HTTPS
+    # downloads with a certificate-issuer error rather than a missing-package one.
+    check_packages ca-certificates
     check_packages ${SYSTEM_PACKAGES} opam
 else
+    check_packages app-misc/ca-certificates
     # shellcheck disable=SC2046
     check_packages $(translate_packages_portage ${SYSTEM_PACKAGES}) dev-ml/opam
 fi
