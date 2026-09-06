@@ -11,10 +11,10 @@ jobs:
       fail-fast: false
       matrix:
         baseImage:
-          - debian:bookworm
-          - ubuntu:noble
-          - fedora:44
           - alpine:3.24
+          - debian:bookworm
+          - fedora:44
+          - ubuntu:noble
     steps:
       - uses: actions/checkout@v7
 
@@ -31,15 +31,15 @@ jobs:
       matrix:
         scenario:
           - minimal
-          - packages_pinned
-          - optional_packages
-          - repositories
-          - pin_packages
-          - version_overrides_match
-          - version_overrides_nomatch
           - non_root_user
+          - optional_packages
+          - packages_pinned
+          - pin_packages
+          - repositories
           - system_packages
           - version_option
+          - version_overrides_match
+          - version_overrides_nomatch
     steps:
       - uses: actions/checkout@v7
 

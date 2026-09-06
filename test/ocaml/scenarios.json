@@ -7,6 +7,27 @@
             }
         }
     },
+    "non_root_user": {
+        "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+        "features": {
+            "ghcr.io/devcontainers/features/common-utils:2": {
+                "installZsh": false,
+                "installOhMyZsh": false,
+                "upgradePackages": false,
+                "username": "octocat"
+            },
+            "ocaml": {}
+        },
+        "remoteUser": "octocat"
+    },
+    "optional_packages": {
+        "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+        "features": {
+            "ocaml": {
+                "optional-packages": "utop this-package-does-not-exist#0.0.0"
+            }
+        }
+    },
     "packages_pinned": {
         "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
         "features": {
@@ -15,11 +36,11 @@
             }
         }
     },
-    "optional_packages": {
+    "pin_packages": {
         "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
         "features": {
             "ocaml": {
-                "optional-packages": "utop this-package-does-not-exist#0.0.0"
+                "pin-packages": "ocamlfind#1.9.6,dune"
             }
         }
     },
@@ -31,11 +52,19 @@
             }
         }
     },
-    "pin_packages": {
+    "system_packages": {
         "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
         "features": {
             "ocaml": {
-                "pin-packages": "ocamlfind#1.9.6,dune"
+                "system-packages": "libgmp-dev pkg-config"
+            }
+        }
+    },
+    "version_option": {
+        "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+        "features": {
+            "ocaml": {
+                "version": "5.2.1"
             }
         }
     },
@@ -54,35 +83,6 @@
             "ocaml": {
                 "version": "4.14.3",
                 "ocaml-version-overrides": "ocamlfind#1.9.6@5.*"
-            }
-        }
-    },
-    "non_root_user": {
-        "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
-        "features": {
-            "ghcr.io/devcontainers/features/common-utils:2": {
-                "installZsh": false,
-                "installOhMyZsh": false,
-                "upgradePackages": false,
-                "username": "octocat"
-            },
-            "ocaml": {}
-        },
-        "remoteUser": "octocat"
-    },
-    "system_packages": {
-        "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
-        "features": {
-            "ocaml": {
-                "system-packages": "libgmp-dev pkg-config"
-            }
-        }
-    },
-    "version_option": {
-        "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
-        "features": {
-            "ocaml": {
-                "version": "5.2.1"
             }
         }
     }
