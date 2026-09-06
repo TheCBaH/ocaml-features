@@ -18,16 +18,27 @@ fi
 echo "Selected OCaml:$OCAML_VERSION base packages: ${BASE_PACKAGES} packages: $PACKAGES optional: ${OPTIONAL_PACKAGES} with ${OPAM_OPTIONS} ${SYSTEM_PACKAGES}"
 
 # Package-manager detection. apt (Debian/Ubuntu) keeps the original,
-# unmodified behavior below; emerge (Gentoo) is the new path. Everything
-# distro-specific is isolated into the helpers this selects, so the rest of
-# the script (opam init/switch/package loop, pin handling, ...) stays a
-# single copy.
+# unmodified behavior below; emerge (Gentoo), dnf/yum/tdnf (Fedora/RHEL
+# family) and apk (Alpine) are additional paths. Everything distro-specific
+# is isolated into the helpers this selects, so the rest of the script (opam
+# init/switch/package loop, pin handling, ...) stays a single copy.
 if command -v apt-get >/dev/null 2>&1; then
     PKG_MANAGER=apt
 elif command -v emerge >/dev/null 2>&1; then
     PKG_MANAGER=portage
+elif command -v dnf >/dev/null 2>&1; then
+    PKG_MANAGER=dnf
+    DNF_CMD=dnf
+elif command -v yum >/dev/null 2>&1; then
+    PKG_MANAGER=dnf
+    DNF_CMD=yum
+elif command -v tdnf >/dev/null 2>&1; then
+    PKG_MANAGER=dnf
+    DNF_CMD=tdnf
+elif command -v apk >/dev/null 2>&1; then
+    PKG_MANAGER=apk
 else
-    echo "Unsupported base image: neither apt-get nor emerge found" >&2
+    echo "Unsupported base image: none of apt-get, emerge, dnf/yum/tdnf, apk found" >&2
     exit 1
 fi
 
@@ -69,19 +80,38 @@ check_packages_portage() {
     emerge --quiet --noreplace "$@"
 }
 
+check_packages_dnf() {
+    [ "$#" -eq 0 ] && return 0
+    "$DNF_CMD" install -y "$@"
+}
+
+# Alpine's index sync is cheap (a small compressed file per repo, no
+# webrsync-style full-tree mirror like Gentoo's), so unlike apt/portage this
+# always re-syncs rather than trying to detect a stale/missing cache.
+apk_update() {
+    apk update
+}
+
+check_packages_apk() {
+    [ "$#" -eq 0 ] && return 0
+    apk_update
+    apk add --no-cache "$@"
+}
+
 check_packages() {
-    if [ "$PKG_MANAGER" = apt ]; then
-        check_packages_apt "$@"
-    else
-        check_packages_portage "$@"
-    fi
+    case "$PKG_MANAGER" in
+        apt) check_packages_apt "$@" ;;
+        portage) check_packages_portage "$@" ;;
+        dnf) check_packages_dnf "$@" ;;
+        apk) check_packages_apk "$@" ;;
+    esac
 }
 
 # devcontainer.json spells system-packages using Debian package names (this
-# repo passes "libgmp-dev pkg-config"); on Gentoo those names don't exist, so
-# translate the ones this feature actually sees. An unmapped name passes
-# through unchanged with a warning rather than failing, so a future
-# Debian-only addition here doesn't hard-break the Gentoo path.
+# repo passes "libgmp-dev pkg-config"); on other package managers those names
+# don't exist, so translate the ones this feature actually sees. An unmapped
+# name passes through unchanged with a warning rather than failing, so a
+# future Debian-only addition here doesn't hard-break the other paths.
 translate_packages_portage() {
     for pkg in "$@"; do
         case "$pkg" in
@@ -94,6 +124,43 @@ translate_packages_portage() {
                 ;;
         esac
     done
+}
+
+translate_packages_dnf() {
+    for pkg in "$@"; do
+        case "$pkg" in
+            libgmp-dev) echo gmp-devel ;;
+            pkg-config) echo pkgconf-pkg-config ;;
+            *)
+                echo "no dnf package mapping for '$pkg', passing through as-is" >&2
+                echo "$pkg"
+                ;;
+        esac
+    done
+}
+
+translate_packages_apk() {
+    for pkg in "$@"; do
+        case "$pkg" in
+            libgmp-dev) echo gmp-dev ;;
+            pkg-config) echo pkgconf ;;
+            *)
+                echo "no apk package mapping for '$pkg', passing through as-is" >&2
+                echo "$pkg"
+                ;;
+        esac
+    done
+}
+
+# devcontainer.json's system-packages is always Debian-spelled; translate for
+# whichever package manager this image actually uses.
+translate_packages() {
+    case "$PKG_MANAGER" in
+        apt) printf '%s\n' "$@" ;;
+        portage) translate_packages_portage "$@" ;;
+        dnf) translate_packages_dnf "$@" ;;
+        apk) translate_packages_apk "$@" ;;
+    esac
 }
 
 export DEBIAN_FRONTEND=noninteractive
@@ -158,17 +225,58 @@ EOF
 )"
 updaterc "$rc"
 
-if [ "$PKG_MANAGER" = apt ]; then
-    # ca-certificates first and on its own: opam's own repository fetch is the
-    # very next network access, and a bare (non-devcontainer-base) image such
-    # as plain debian/ubuntu has no CA trust store at all, which fails HTTPS
-    # downloads with a certificate-issuer error rather than a missing-package one.
-    check_packages ca-certificates
-    check_packages ${SYSTEM_PACKAGES} opam
+# ca-certificates first and on its own: opam's own repository fetch (or, on
+# the binary-installer fallback below, curl's fetch of the installer itself)
+# is the very next network access, and a bare (non-devcontainer-base) image
+# such as plain debian/ubuntu has no CA trust store at all, which fails HTTPS
+# downloads with a certificate-issuer error rather than a missing-package one.
+case "$PKG_MANAGER" in
+    portage) check_packages app-misc/ca-certificates ;;
+    *) check_packages ca-certificates ;;
+esac
+
+# shellcheck disable=SC2046
+check_packages $(translate_packages ${SYSTEM_PACKAGES})
+
+# Prefer the distro-packaged opam: it pulls in the OCaml build toolchain as a
+# transitive dependency. Only Debian/Ubuntu, Gentoo and Fedora actually
+# package opam -- RHEL clones (no EPEL build) and stable Alpine (opam only
+# exists in Alpine's edge/community branch, not any release) don't. Fall back
+# to opam's own prebuilt-binary installer there, installing the build
+# toolchain ourselves first since a raw binary has no dependencies to pull it in.
+opam_available() {
+    case "$PKG_MANAGER" in
+        apt|portage) return 0 ;;
+        dnf) "$DNF_CMD" list opam >/dev/null 2>&1 ;;
+        apk) apk_update; apk add --simulate --no-cache opam >/dev/null 2>&1 ;;
+    esac
+}
+
+install_opam_binary() {
+    echo "No distro package for opam on this image; installing the upstream prebuilt binary from opam.ocaml.org"
+    case "$PKG_MANAGER" in
+        dnf) check_packages gcc make ;;
+        apk) check_packages build-base ;;
+    esac
+    check_packages curl
+    tmp_dir=$(mktemp -d)
+    (cd "$tmp_dir" && curl -fsSL https://opam.ocaml.org/install.sh | sh -s -- --download-only)
+    bin=$(find "$tmp_dir" -maxdepth 1 -name 'opam-*' -type f | head -n 1)
+    if [ -z "$bin" ]; then
+        echo "opam installer did not produce a binary in $tmp_dir" >&2
+        exit 1
+    fi
+    install -m 0755 "$bin" /usr/local/bin/opam
+    rm -rf "$tmp_dir"
+}
+
+if opam_available; then
+    case "$PKG_MANAGER" in
+        portage) check_packages dev-ml/opam ;;
+        *) check_packages opam ;;
+    esac
 else
-    check_packages app-misc/ca-certificates
-    # shellcheck disable=SC2046
-    check_packages $(translate_packages_portage ${SYSTEM_PACKAGES}) dev-ml/opam
+    install_opam_binary
 fi
 
 export OPAMJOBS="$(getconf _NPROCESSORS_ONLN)"
@@ -298,10 +406,19 @@ opam clean --repo-cache
 opam list
 chown -R ${USERNAME}:${USERNAME} $OPAMROOT
 
-if [ "$PKG_MANAGER" = apt ]; then
-    apt-get autoremove -y
-    apt-get clean -y
-    rm -rf /var/lib/apt/lists/*
-else
-    rm -rf /var/cache/distfiles/* /var/cache/binpkgs/*
-fi
+case "$PKG_MANAGER" in
+    apt)
+        apt-get autoremove -y
+        apt-get clean -y
+        rm -rf /var/lib/apt/lists/*
+        ;;
+    portage)
+        rm -rf /var/cache/distfiles/* /var/cache/binpkgs/*
+        ;;
+    dnf)
+        "$DNF_CMD" clean all
+        ;;
+    apk)
+        rm -rf /var/cache/apk/*
+        ;;
+esac

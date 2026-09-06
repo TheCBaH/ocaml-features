@@ -1,6 +1,7 @@
 # ocaml/opam toolchains (ocaml)
 
-Install ocaml/opam toolchains (Debian/Ubuntu apt or Gentoo portage)
+Install ocaml/opam toolchains (Debian/Ubuntu apt, Fedora/RHEL-family dnf,
+Alpine apk, or Gentoo portage)
 
 ## Example Usage
 
@@ -31,9 +32,16 @@ Install ocaml/opam toolchains (Debian/Ubuntu apt or Gentoo portage)
 
 ## Supported distributions
 
-- Debian/Ubuntu, via `apt-get` and opam.
-- Gentoo, via Portage (`emerge`) and opam. `system-packages` is still spelled
-  with Debian package names; unmapped names are translated to Portage atoms
-  where known (see `NOTES.md`) and passed through unchanged otherwise.
+- Debian/Ubuntu, via `apt-get`. opam is a native package there.
+- Fedora, via `dnf`. opam is a native package there too.
+- Gentoo, via Portage (`emerge`). opam (`dev-ml/opam`) is a native package.
+- RHEL-family clones without a native opam package (CentOS, Rocky, AlmaLinux,
+  ...) and Alpine (opam is only packaged in Alpine's `edge`/`community`
+  branch, not any release) fall back to opam's own prebuilt-binary installer
+  (`opam.ocaml.org/install.sh --download-only`).
+
+`system-packages` is always spelled with Debian package names; unmapped names
+are translated to the target package manager's names where known (see
+`NOTES.md`) and passed through unchanged otherwise.
 
 See `NOTES.md` for behavior notes that aren't obvious from the option list.

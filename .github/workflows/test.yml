@@ -13,6 +13,8 @@ jobs:
         baseImage:
           - debian:bookworm
           - ubuntu:noble
+          - fedora:44
+          - alpine:3.24
     steps:
       - uses: actions/checkout@v7
 

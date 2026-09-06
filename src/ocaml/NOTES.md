@@ -2,21 +2,39 @@
 
 ## Package-manager detection
 
-`install.sh` branches on `apt-get` vs. `emerge` at the top of the script; the
-rest of the script (opam init/switch/package loop, pin handling, overrides)
-is a single shared code path. Adding a third distribution means adding a
-`check_packages_<mgr>`/`translate_packages_<mgr>` pair and a branch in
-`PKG_MANAGER` detection, not a parallel script.
+`install.sh` branches on `apt-get`/`emerge`/`dnf`(or `yum`/`tdnf`)/`apk` at
+the top of the script; the rest of the script (opam init/switch/package
+loop, pin handling, overrides) is a single shared code path. Adding another
+package manager means adding a `check_packages_<mgr>`/`translate_packages_<mgr>`
+pair and a branch in `PKG_MANAGER` detection (plus `opam_available()` and the
+final-cleanup `case`), not a parallel script.
 
-## Debian → Portage package-name translation
+## Debian → other package-manager name translation
 
 `system-packages` is always spelled with Debian package names, even on
-Gentoo. `translate_packages_portage()` maps the ones this feature has
-actually needed (`libgmp-dev` → `dev-libs/gmp`, `pkg-config` →
-`dev-util/pkgconf`). An unmapped name passes through unchanged with a
-warning rather than failing the build — add new entries to that table (not
-to a caller's `devcontainer.json`) when a future `system-packages` value
-needs a Gentoo-side name that differs from the Debian one.
+non-Debian package managers. `translate_packages_<mgr>()` maps the ones this
+feature has actually needed (`libgmp-dev`, `pkg-config`) to each target's
+name. An unmapped name passes through unchanged with a warning rather than
+failing the build — add new entries to the relevant table (not to a caller's
+`devcontainer.json`) when a future `system-packages` value needs a
+non-Debian name that differs from the Debian one.
+
+## opam: distro package vs. the upstream binary installer
+
+`common-utils` (the devcontainers/features one, not TheCBaH's Gentoo fork)
+supports three OS families: debian, rhel (RHEL/Fedora/CentOS/Rocky/Alma/Azure
+Linux/Mariner), and alpine. Checked against real package indexes (not just
+opam's own generic install docs, which list `apk add opam` without
+qualification and are misleading here): opam is a real package on
+Debian/Ubuntu, Fedora, and Gentoo, but **not** on RHEL-clones (no EPEL build)
+or any stable Alpine release (only Alpine's `edge`/`community` branch has
+it — verified via pkgs.alpinelinux.org, not just the docs page). `dnf`/`apk`
+therefore probe availability first (`opam_available()`) and fall back to
+`opam.ocaml.org/install.sh --download-only` plus a manual `install -m 0755`
+into `/usr/local/bin` when there's no distro package — this also means the
+fallback path must install the build toolchain (gcc/make, or Alpine's
+`build-base`) itself, since a raw binary has no package dependencies to pull
+it in the way the distro-packaged opam does.
 
 ## `OPAMROOT` ownership
 
