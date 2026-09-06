@@ -1,0 +1,9 @@
+{
+    "ocaml_with_git": {
+        "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+        "features": {
+            "ocaml": {},
+            "ghcr.io/devcontainers/features/git:1": {}
+        }
+    }
+}
