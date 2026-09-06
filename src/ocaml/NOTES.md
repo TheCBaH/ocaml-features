@@ -33,9 +33,11 @@ into `/usr/local/bin` when there's no distro package.
 
 Neither path is a clean transitive-dependency story:
 
-- Alpine's `opam` package doesn't depend on a C compiler, so `build-base` is
-  installed unconditionally, whether or not opam itself came from `apk` or
-  the fallback.
+- Alpine's `opam` package doesn't depend on a C compiler, so `bash build-base`
+  is installed unconditionally, whether or not opam itself came from `apk` or
+  the fallback. `bash` is needed separately from `build-base`: some opam
+  packages' dune rules use `(bash ...)` actions, and Alpine's default
+  `/bin/sh` (busybox ash) isn't bash.
 - The binary-installer fallback (only ever reached via `dnf`, since Alpine
   always has a package) must install the whole build toolchain itself, since
   a raw binary has no dependencies to pull it in:

@@ -251,9 +251,11 @@ check_packages $(translate_packages ${SYSTEM_PACKAGES})
 # compiler the way Debian/Fedora/Gentoo's packaging does, so opam switch
 # creation fails with "no acceptable C compiler found" even on the
 # distro-package path -- ensure the build toolchain unconditionally here,
-# not only in the binary-installer fallback below.
+# not only in the binary-installer fallback below. bash is separate from
+# build-base: some opam packages' dune rules use `(bash ...)` actions, and
+# Alpine's default /bin/sh (busybox ash) isn't bash.
 case "$PKG_MANAGER" in
-    apk) check_packages build-base ;;
+    apk) check_packages bash build-base ;;
 esac
 
 # Prefer the distro-packaged opam: on every other package manager it pulls in
