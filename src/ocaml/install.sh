@@ -82,7 +82,16 @@ check_packages_portage() {
 
 check_packages_dnf() {
     [ "$#" -eq 0 ] && return 0
-    "$DNF_CMD" install -y "$@"
+    if [ "$DNF_CMD" = dnf ]; then
+        # --allowerasing: RHEL9-family images (e.g. rockylinux:9) ship
+        # curl-minimal preinstalled, which plain `dnf install curl` refuses
+        # as a conflict rather than swapping it -- harmless here since we
+        # only need the full curl for its own sake, not anything
+        # curl-minimal provides. yum/tdnf don't have this flag.
+        "$DNF_CMD" install -y --allowerasing "$@"
+    else
+        "$DNF_CMD" install -y "$@"
+    fi
 }
 
 # Alpine's index sync is cheap (a small compressed file per repo, no
@@ -238,12 +247,21 @@ esac
 # shellcheck disable=SC2046
 check_packages $(translate_packages ${SYSTEM_PACKAGES})
 
-# Prefer the distro-packaged opam: it pulls in the OCaml build toolchain as a
-# transitive dependency. Only Debian/Ubuntu, Gentoo and Fedora actually
-# package opam -- RHEL clones (no EPEL build) and stable Alpine (opam only
-# exists in Alpine's edge/community branch, not any release) don't. Fall back
-# to opam's own prebuilt-binary installer there, installing the build
-# toolchain ourselves first since a raw binary has no dependencies to pull it in.
+# Alpine's opam package (when it has one at all) doesn't depend on a C
+# compiler the way Debian/Fedora/Gentoo's packaging does, so opam switch
+# creation fails with "no acceptable C compiler found" even on the
+# distro-package path -- ensure the build toolchain unconditionally here,
+# not only in the binary-installer fallback below.
+case "$PKG_MANAGER" in
+    apk) check_packages build-base ;;
+esac
+
+# Prefer the distro-packaged opam: on every other package manager it pulls in
+# the OCaml build toolchain as a transitive dependency. Only Debian/Ubuntu,
+# Gentoo and Fedora actually package opam -- RHEL clones (no EPEL build)
+# don't. Fall back to opam's own prebuilt-binary installer there, installing
+# the build toolchain ourselves first since a raw binary has no dependencies
+# to pull it in.
 opam_available() {
     case "$PKG_MANAGER" in
         apt|portage) return 0 ;;
@@ -256,7 +274,7 @@ install_opam_binary() {
     echo "No distro package for opam on this image; installing the upstream prebuilt binary from opam.ocaml.org"
     case "$PKG_MANAGER" in
         dnf) check_packages curl gcc make unzip bubblewrap patch ;;
-        apk) check_packages curl build-base ;;
+        apk) check_packages curl ;;
     esac
     tmp_dir=$(mktemp -d)
     (cd "$tmp_dir" && curl -fsSL https://opam.ocaml.org/install.sh | sh -s -- --download-only)
