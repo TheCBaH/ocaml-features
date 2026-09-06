@@ -1,13 +1,9 @@
 {
-    "color_and_hello": {
+    "ocaml_with_git": {
         "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
         "features": {
-            "color": {
-                "favorite": "purple"
-            },
-            "hello": {
-                "greeting": "Greetings"
-            }
+            "ocaml": {},
+            "ghcr.io/devcontainers/features/git:1": {}
         }
     }
 }

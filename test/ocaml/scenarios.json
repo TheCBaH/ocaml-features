@@ -1,0 +1,81 @@
+{
+    "minimal": {
+        "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+        "features": {
+            "ocaml": {
+                "base-packages": ""
+            }
+        }
+    },
+    "packages_pinned": {
+        "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+        "features": {
+            "ocaml": {
+                "packages": "utop ocamlfind#1.9.6"
+            }
+        }
+    },
+    "optional_packages": {
+        "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+        "features": {
+            "ocaml": {
+                "optional-packages": "utop this-package-does-not-exist#0.0.0"
+            }
+        }
+    },
+    "repositories": {
+        "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+        "features": {
+            "ocaml": {
+                "repositories": "extra https://opam.ocaml.org"
+            }
+        }
+    },
+    "pin_packages": {
+        "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+        "features": {
+            "ocaml": {
+                "pin-packages": "ocamlfind#1.9.6,dune"
+            }
+        }
+    },
+    "version_overrides_match": {
+        "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+        "features": {
+            "ocaml": {
+                "version": "4.14.3",
+                "ocaml-version-overrides": "ocamlfind#1.9.6@4.14.*"
+            }
+        }
+    },
+    "version_overrides_nomatch": {
+        "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+        "features": {
+            "ocaml": {
+                "version": "4.14.3",
+                "ocaml-version-overrides": "ocamlfind#1.9.6@5.*"
+            }
+        }
+    },
+    "non_root_user": {
+        "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+        "features": {
+            "ghcr.io/devcontainers/features/common-utils:2": {
+                "installZsh": false,
+                "installOhMyZsh": false,
+                "upgradePackages": false,
+                "username": "octocat"
+            },
+            "ocaml": {}
+        },
+        "remoteUser": "octocat"
+    },
+    "system_packages": {
+        "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+        "features": {
+            "ocaml": {
+                "system-packages": "libgmp-dev pkg-config"
+            }
+        }
+    }
+}

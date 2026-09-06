@@ -2,15 +2,36 @@ name: "Validate devcontainer-feature.json files"
 on:
   workflow_dispatch:
   pull_request:
+  push:
 
 jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       - name: "Validate devcontainer-feature.json files"
         uses: devcontainers/action@v1
         with:
           validate-only: "true"
           base-path-to-features: "./src"
+
+      - name: "Shell syntax check"
+        run: |
+          for f in src/*/install.sh; do
+            echo "sh -n $f"
+            sh -n "$f"
+          done
+
+      - name: "ShellCheck"
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y shellcheck
+          shellcheck -S error src/*/install.sh
+
+      - name: "Version bump check"
+        run: |
+          git fetch origin main --depth=1 || true
+          sh .github/workflows/check-version-bump.sh
