@@ -40,7 +40,7 @@
         "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
         "features": {
             "ocaml": {
-                "pin-packages": "ocamlfind#1.9.6,dune 3.15.0"
+                "pin-packages": "ocamlfind#1.9.6,dune 3.15.3"
             }
         }
     },
