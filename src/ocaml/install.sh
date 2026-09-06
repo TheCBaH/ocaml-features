@@ -273,7 +273,7 @@ opam_available() {
 install_opam_binary() {
     echo "No distro package for opam on this image; installing the upstream prebuilt binary from opam.ocaml.org"
     case "$PKG_MANAGER" in
-        dnf) check_packages curl gcc make unzip bubblewrap patch ;;
+        dnf) check_packages curl gcc make unzip bubblewrap patch bzip2 ;;
         apk) check_packages curl ;;
     esac
     tmp_dir=$(mktemp -d)
