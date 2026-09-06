@@ -1,7 +1,7 @@
 # ocaml/opam toolchains (ocaml)
 
-Install ocaml/opam toolchains (Debian/Ubuntu apt, Fedora/RHEL-family dnf,
-Alpine apk, or Gentoo portage)
+Install ocaml/opam toolchains (Alpine apk, Debian/Ubuntu apt, Fedora/
+RHEL-family dnf, or Gentoo portage)
 
 ## Example Usage
 
@@ -32,13 +32,15 @@ Alpine apk, or Gentoo portage)
 
 ## Supported distributions
 
+- Alpine, via `apk`. opam is a native package there, but doesn't pull in a C
+  compiler, so `build-base` is always installed alongside it.
 - Debian/Ubuntu, via `apt-get`. opam is a native package there.
 - Fedora, via `dnf`. opam is a native package there too.
 - Gentoo, via Portage (`emerge`). opam (`dev-ml/opam`) is a native package.
 - RHEL-family clones without a native opam package (CentOS, Rocky, AlmaLinux,
-  ...) and Alpine (opam is only packaged in Alpine's `edge`/`community`
-  branch, not any release) fall back to opam's own prebuilt-binary installer
-  (`opam.ocaml.org/install.sh --download-only`).
+  ...) fall back to opam's own prebuilt-binary installer
+  (`opam.ocaml.org/install.sh --download-only`), installing the build
+  toolchain (`bubblewrap bzip2 curl gcc make patch unzip`) themselves first.
 
 `system-packages` is always spelled with Debian package names; unmapped names
 are translated to the target package manager's names where known (see

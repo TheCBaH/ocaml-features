@@ -109,10 +109,10 @@ check_packages_apk() {
 
 check_packages() {
     case "$PKG_MANAGER" in
-        apt) check_packages_apt "$@" ;;
-        portage) check_packages_portage "$@" ;;
-        dnf) check_packages_dnf "$@" ;;
         apk) check_packages_apk "$@" ;;
+        apt) check_packages_apt "$@" ;;
+        dnf) check_packages_dnf "$@" ;;
+        portage) check_packages_portage "$@" ;;
     esac
 }
 
@@ -165,10 +165,10 @@ translate_packages_apk() {
 # whichever package manager this image actually uses.
 translate_packages() {
     case "$PKG_MANAGER" in
-        apt) printf '%s\n' "$@" ;;
-        portage) translate_packages_portage "$@" ;;
-        dnf) translate_packages_dnf "$@" ;;
         apk) translate_packages_apk "$@" ;;
+        apt) printf '%s\n' "$@" ;;
+        dnf) translate_packages_dnf "$@" ;;
+        portage) translate_packages_portage "$@" ;;
     esac
 }
 
@@ -258,23 +258,23 @@ esac
 
 # Prefer the distro-packaged opam: on every other package manager it pulls in
 # the OCaml build toolchain as a transitive dependency. Only Debian/Ubuntu,
-# Gentoo and Fedora actually package opam -- RHEL clones (no EPEL build)
+# Fedora and Gentoo actually package opam -- RHEL clones (no EPEL build)
 # don't. Fall back to opam's own prebuilt-binary installer there, installing
 # the build toolchain ourselves first since a raw binary has no dependencies
 # to pull it in.
 opam_available() {
     case "$PKG_MANAGER" in
+        apk) apk_update; apk add --simulate --no-cache opam >/dev/null 2>&1 ;;
         apt|portage) return 0 ;;
         dnf) "$DNF_CMD" list opam >/dev/null 2>&1 ;;
-        apk) apk_update; apk add --simulate --no-cache opam >/dev/null 2>&1 ;;
     esac
 }
 
 install_opam_binary() {
     echo "No distro package for opam on this image; installing the upstream prebuilt binary from opam.ocaml.org"
     case "$PKG_MANAGER" in
-        dnf) check_packages curl gcc make unzip bubblewrap patch bzip2 ;;
         apk) check_packages curl ;;
+        dnf) check_packages bubblewrap bzip2 curl gcc make patch unzip ;;
     esac
     tmp_dir=$(mktemp -d)
     (cd "$tmp_dir" && curl -fsSL https://opam.ocaml.org/install.sh | sh -s -- --download-only)
@@ -440,18 +440,18 @@ chown_gid=$(id -g "$USERNAME")
 find "$OPAMROOT" \( ! -uid "$chown_uid" -o ! -gid "$chown_gid" \) -exec chown "$chown_uid:$chown_gid" {} +
 
 case "$PKG_MANAGER" in
+    apk)
+        rm -rf /var/cache/apk/*
+        ;;
     apt)
         apt-get autoremove -y
         apt-get clean -y
         rm -rf /var/lib/apt/lists/*
         ;;
-    portage)
-        rm -rf /var/cache/distfiles/* /var/cache/binpkgs/*
-        ;;
     dnf)
         "$DNF_CMD" clean all
         ;;
-    apk)
-        rm -rf /var/cache/apk/*
+    portage)
+        rm -rf /var/cache/distfiles/* /var/cache/binpkgs/*
         ;;
 esac

@@ -2,7 +2,7 @@
 
 ## Package-manager detection
 
-`install.sh` branches on `apt-get`/`emerge`/`dnf`(or `yum`/`tdnf`)/`apk` at
+`install.sh` branches on `apk`/`apt-get`/`dnf`(or `yum`/`tdnf`)/`emerge` at
 the top of the script; the rest of the script (opam init/switch/package
 loop, pin handling, overrides) is a single shared code path. Adding another
 package manager means adding a `check_packages_<mgr>`/`translate_packages_<mgr>`
@@ -22,20 +22,30 @@ non-Debian name that differs from the Debian one.
 ## opam: distro package vs. the upstream binary installer
 
 `common-utils` (the devcontainers/features one, not TheCBaH's Gentoo fork)
-supports three OS families: debian, rhel (RHEL/Fedora/CentOS/Rocky/Alma/Azure
-Linux/Mariner), and alpine. Checked against real package indexes (not just
-opam's own generic install docs, which list `apk add opam` without
-qualification and are misleading here): opam is a real package on
-Debian/Ubuntu, Fedora, and Gentoo, but **not** on RHEL-clones (no EPEL build)
-or any stable Alpine release (only Alpine's `edge`/`community` branch has
-it — verified via pkgs.alpinelinux.org, not just the docs page). `dnf`/`apk`
+supports three OS families: alpine, debian, and rhel (RHEL/Fedora/CentOS/
+Rocky/Alma/Azure Linux/Mariner). opam itself is a real package on Alpine,
+Debian/Ubuntu, Fedora, and Gentoo, but **not** on RHEL-clones — no EPEL
+build (checked against real package indexes, not just opam's own generic
+install docs page, which is not distro-availability-accurate). `dnf`/`apk`
 therefore probe availability first (`opam_available()`) and fall back to
 `opam.ocaml.org/install.sh --download-only` plus a manual `install -m 0755`
-into `/usr/local/bin` when there's no distro package — this also means the
-fallback path must install the build toolchain itself, since a raw binary
-has no package dependencies to pull it in the way the distro-packaged opam
-does: `curl gcc make unzip bubblewrap patch` on dnf (a RHEL clone like Rocky
-has none of these by default), `curl build-base` on Alpine.
+into `/usr/local/bin` when there's no distro package.
+
+Neither path is a clean transitive-dependency story:
+
+- Alpine's `opam` package doesn't depend on a C compiler, so `build-base` is
+  installed unconditionally, whether or not opam itself came from `apk` or
+  the fallback.
+- The binary-installer fallback (only ever reached via `dnf`, since Alpine
+  always has a package) must install the whole build toolchain itself, since
+  a raw binary has no dependencies to pull it in:
+  `bubblewrap bzip2 curl gcc make patch unzip` (`bzip2` because opam
+  distributes several packages, e.g. dune and ocamlformat, as `.tbz`
+  archives; a minimal RHEL-clone has `tar` but not `bzip2`).
+- `dnf install` on that same fallback path uses `--allowerasing`: RHEL9-clone
+  images (`rockylinux:9`) ship `curl-minimal` preinstalled, which conflicts
+  with the full `curl` package otherwise.
+
 Exercised in CI by `rockylinux:9` (no opam package, so this is the only image
 that actually drives the fallback path) and `fedora:44` (has opam, so it
 drives the distro-package path instead).

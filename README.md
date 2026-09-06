@@ -12,9 +12,9 @@ copies of upstream Features.
 
 ### `ocaml`
 
-Installs ocaml/opam toolchains on Debian/Ubuntu (`apt-get`) or Gentoo
-(Portage). See [`src/ocaml/README.md`](src/ocaml/README.md) for the full
-option list.
+Installs ocaml/opam toolchains on Alpine (`apk`), Debian/Ubuntu (`apt-get`),
+Fedora/RHEL-family (`dnf`), or Gentoo (Portage). See
+[`src/ocaml/README.md`](src/ocaml/README.md) for the full option list.
 
 ```jsonc
 {
@@ -52,4 +52,4 @@ normal promotion path.
 
 ## License
 
-[ISC](LICENSE)
+[MIT](LICENSE)
