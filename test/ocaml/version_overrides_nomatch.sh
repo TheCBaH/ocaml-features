@@ -5,7 +5,7 @@
 set -e
 
 source dev-container-features-test-lib
-[ -f /etc/profile.d/ocaml-opam.sh ] && . /etc/profile.d/ocaml-opam.sh
+export OPAMROOT=/opt/opam
 eval "$(opam env)"
 
 check "OCaml version is 4.14.3" bash -c 'ocamlc -version | grep -Fx 4.14.3'

@@ -5,7 +5,7 @@
 set -e
 
 source dev-container-features-test-lib
-[ -f /etc/profile.d/ocaml-opam.sh ] && . /etc/profile.d/ocaml-opam.sh
+export OPAMROOT=/opt/opam
 eval "$(opam env)"
 
 check "ocamlfind pinned to 1.9.6" bash -c 'opam list --installed --column=version -s ocamlfind | grep -Fx 1.9.6'
