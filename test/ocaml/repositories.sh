@@ -7,6 +7,6 @@ source dev-container-features-test-lib
 export OPAMROOT=/opt/opam
 eval "$(opam env)"
 
-check "extra repository registered" bash -c 'opam repo list --all | grep -qx extra'
+check "extra repository registered" bash -c "opam repo list --all | grep -qw '^extra'"
 
 reportResults
