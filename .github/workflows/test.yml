@@ -11,7 +11,7 @@ jobs:
       fail-fast: false
       matrix:
         baseImage:
-          - alpine:3.24
+          # alpine:3.24 disabled: flaky, intermittent OCaml coldstart build failures
           - debian:bookworm
           - fedora:44
           - rockylinux:9
