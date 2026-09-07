@@ -38,6 +38,8 @@ jobs:
           - pin_packages
           - repositories
           - system_packages
+          - variant_flambda
+          - variant_musl_static
           - version_option
           - version_overrides_match
           - version_overrides_nomatch

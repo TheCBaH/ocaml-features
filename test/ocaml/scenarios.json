@@ -60,6 +60,25 @@
             }
         }
     },
+    "variant_flambda": {
+        "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+        "features": {
+            "ocaml": {
+                "base-packages": "",
+                "options": "ocaml-option-flambda"
+            }
+        }
+    },
+    "variant_musl_static": {
+        "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+        "features": {
+            "ocaml": {
+                "base-packages": "",
+                "system-packages": "musl-tools",
+                "options": "ocaml-option-musl,ocaml-option-static"
+            }
+        }
+    },
     "version_option": {
         "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
         "features": {

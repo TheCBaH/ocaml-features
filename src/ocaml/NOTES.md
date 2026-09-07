@@ -90,3 +90,18 @@ build — that is intentional, not a gap to fix.
 Version-scoped overrides (`name#version@ocaml-pattern`) are applied after
 `packages`/`pin-packages`/`repositories`, so they can override an otherwise
 unconditional pin for one specific OCaml switch.
+
+## Compiler variants (`options`)
+
+`options` is spliced directly into the switch-creation package list:
+`opam switch create $OCAML_VERSION --packages=ocaml-variants.$OCAML_VERSION+options,$OPTIONS`.
+The real packages behind common variants are `ocaml-option-flambda`,
+`ocaml-option-musl`, `ocaml-option-static` (comma-separate to combine, e.g.
+`ocaml-option-musl,ocaml-option-static` for a fully static musl binary) —
+verified against `opam-repository`, not guessed. `ocaml-option-musl`
+declares a real depext (`musl-tools` on Debian), which this feature has no
+special handling for — it's just another `system-packages` value the caller
+must pass explicitly, same as any other compiler/library requirement.
+`variant_flambda`/`variant_musl_static` in `test/ocaml/scenarios.json`
+verify the actual outcome (a real `flambda: true` in `ocamlopt -config`, a
+real statically-linked binary), not just that opam accepted the option.
