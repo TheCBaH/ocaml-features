@@ -36,6 +36,22 @@
             }
         }
     },
+    "pin_git_ref_packages": {
+        "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+        "features": {
+            "ocaml": {
+                "packages": "err_trace#git+https://github.com/TheCBaH/err_trace#ff50f85"
+            }
+        }
+    },
+    "pin_git_ref_pin_packages": {
+        "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+        "features": {
+            "ocaml": {
+                "pin-packages": "err_trace git+https://github.com/TheCBaH/err_trace#ff50f85"
+            }
+        }
+    },
     "pin_packages": {
         "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
         "features": {

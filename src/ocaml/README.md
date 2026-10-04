@@ -27,7 +27,7 @@ RHEL-family dnf, or Gentoo portage)
 | options | OPAM switch options: comma-separated `ocaml-option-*` variant packages (e.g. 'ocaml-option-flambda', or 'ocaml-option-musl,ocaml-option-static' for a fully static musl-linked compiler — the latter also needs `system-packages: musl-tools` on Debian/Ubuntu) | string | - |
 | system-packages | additional system packages | string | - |
 | repositories | comma-separated extra opam repositories to add before installing packages: 'name url' pairs (e.g. 'rocq-released https://rocq-prover.org/opam/released') | string | - |
-| pin-packages | comma-separated packages to pin: use 'name#version' to pin a specific version, 'name url' or 'name version' to pin via opam pin add (e.g. 'pkg1#1.0.0,pkg2 https://repo.git#branch') | string | - |
+| pin-packages | comma-separated packages to pin: use 'name#version' (the version, or a pin target such as 'git+https://repo.git#sha', is everything after the first '#') or 'name target' to pin via opam pin add (e.g. 'pkg1#1.0.0,pkg2 https://repo.git#branch') | string | - |
 | ocaml-version-overrides | space-separated package pins applied only to matching OCaml versions: use 'name#version@ocaml-pattern', where the pattern is a shell glob (e.g. 'yojson#2.2.2@4.12.*'). Matching overrides are applied after other pins. | string | - |
 
 ## Supported distributions

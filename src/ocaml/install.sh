@@ -323,8 +323,8 @@ OPAM_PACKAGES=""
 for pkg in ${BASE_PACKAGES} ${PACKAGES}; do
     case "$pkg" in
         *#*)
-            pkg_name=$(echo "$pkg" | cut -d'#' -f1)
-            pkg_ver=$(echo "$pkg" | cut -d'#' -f2)
+            pkg_name=${pkg%%#*}
+            pkg_ver=${pkg#*#}
             opam pin add --no-action "$pkg_name" "$pkg_ver"
             OPAM_PACKAGES="${OPAM_PACKAGES} ${pkg_name}"
             ;;
@@ -338,8 +338,8 @@ OPTIONAL_OPAM_PACKAGES=""
 for pkg in ${OPTIONAL_PACKAGES}; do
     case "$pkg" in
         *#*)
-            pkg_name=$(echo "$pkg" | cut -d'#' -f1)
-            pkg_ver=$(echo "$pkg" | cut -d'#' -f2)
+            pkg_name=${pkg%%#*}
+            pkg_ver=${pkg#*#}
             # Unlike packages/pin-packages, a pin failure here (e.g. the
             # package name doesn't exist at all, not just an unsolvable
             # version) must not abort the build: "optional" means skip it,
@@ -363,14 +363,19 @@ if [ -n "${PIN_PACKAGES}" ]; then
         IFS="$OLDIFS"
         entry=$(echo "$entry" | xargs)
         if [ -n "$entry" ]; then
+            # 'name target' first: its target may contain '#' (a git ref).
             case "$entry" in
+                *[[:space:]]*)
+                    pkg_name=$(echo "$entry" | awk '{print $1}')
+                    opam pin add --no-action $entry
+                    ;;
                 *#*)
-                    pkg_name=$(echo "$entry" | cut -d'#' -f1)
-                    pkg_ver=$(echo "$entry" | cut -d'#' -f2)
+                    pkg_name=${entry%%#*}
+                    pkg_ver=${entry#*#}
                     opam pin add --no-action "$pkg_name" "$pkg_ver"
                     ;;
                 *)
-                    pkg_name=$(echo "$entry" | awk '{print $1}')
+                    pkg_name=$entry
                     opam pin add --no-action $entry
                     ;;
             esac
@@ -396,8 +401,8 @@ for entry in ${OCAML_VERSION_OVERRIDES}; do
     esac
     case "$pin_spec" in
         *#*)
-            pkg_name=$(echo "$pin_spec" | cut -d'#' -f1)
-            pkg_ver=$(echo "$pin_spec" | cut -d'#' -f2)
+            pkg_name=${pin_spec%%#*}
+            pkg_ver=${pin_spec#*#}
             ;;
         *)
             echo "Invalid ocaml-version-overrides entry '$entry': expected name#version@ocaml-pattern" >&2
